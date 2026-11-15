@@ -1,0 +1,59 @@
+name: CrewForge CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: crewforge
+          POSTGRES_PASSWORD: crewforge_ci_password
+          POSTGRES_DB: crewforge_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: crewforge
+      PGPASSWORD: crewforge_ci_password
+      PGDATABASE: crewforge_test
+      JWT_SECRET: ci-test-jwt-secret-minimum-32-chars
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Apply PostgreSQL migrations
+        run: npm run migrate
+
+      - name: Type-check TypeScript
+        run: npm run lint
+
+      - name: Run pure domain logic unit tests
+        run: npm run test:unit
+
+      - name: Run 28-scenario PostgreSQL integration & 50-user concurrency tests
+        run: npm test
+
+      - name: Build production frontend bundle
+        run: npm run build

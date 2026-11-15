@@ -1,0 +1,8 @@
+{
+  "name": "CrewForge",
+  "description": "Race-proof hackathon team formation platform powered by transactional PostgreSQL row-level locking, idempotent mutations, and real-time discovery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

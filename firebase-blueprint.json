@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated CrewForge participant profile linked to Firebase Auth UID",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "email": { "type": "string", "format": "email", "maxLength": 254 },
+        "role": { "type": "string", "enum": ["participant", "organizer"] },
+        "timezone": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "fullName", "email", "role", "timezone", "createdAt", "updatedAt"]
+    },
+    "TeamSnapshot": {
+      "title": "TeamSnapshot",
+      "description": "Non-PII live team capacity telemetry snapshot synced from PostgreSQL",
+      "type": "object",
+      "properties": {
+        "teamId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "hackathonId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "memberCount": { "type": "number" },
+        "maxCapacity": { "type": "number" },
+        "status": { "type": "string", "enum": ["forming", "ready", "locked"] },
+        "visibility": { "type": "string", "enum": ["public"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["teamId", "hackathonId", "name", "memberCount", "maxCapacity", "status", "visibility", "updatedAt"]
+    },
+    "RaceExperiment": {
+      "title": "RaceExperiment",
+      "description": "Verified RaceLab concurrency experiment summary owned by the operator",
+      "type": "object",
+      "properties": {
+        "experimentId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "actorUid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "totalRequests": { "type": "number" },
+        "winners": { "type": "number" },
+        "capacityRejections": { "type": "number" },
+        "passedAssertions": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["experimentId", "actorUid", "totalRequests", "winners", "capacityRejections", "passedAssertions", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Owner-isolated user profile metadata"
+    },
+    "/team_snapshots/{teamId}": {
+      "schema": { "$ref": "#/entities/TeamSnapshot" },
+      "description": "Server-maintained non-PII live team capacity snapshots"
+    },
+    "/race_experiments/{experimentId}": {
+      "schema": { "$ref": "#/entities/RaceExperiment" },
+      "description": "Operator-scoped RaceLab concurrency run records"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: crewforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${SQL_USER:-crewforge}
+      POSTGRES_PASSWORD: ${SQL_PASSWORD:-crewforge_local_dev_pw}
+      POSTGRES_DB: ${SQL_DATABASE:-crewforge}
+    ports:
+      - "${SQL_PORT:-5432}:5432"
+    volumes:
+      - crewforge_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SQL_USER:-crewforge} -d ${SQL_DATABASE:-crewforge}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crewforge-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SQL_HOST: postgres
+      SQL_PORT: 5432
+      SQL_USER: ${SQL_USER:-crewforge}
+      SQL_PASSWORD: ${SQL_PASSWORD:-crewforge_local_dev_pw}
+      SQL_DATABASE: ${SQL_DATABASE:-crewforge}
+      PG_POOL_MAX: 30
+      JWT_SECRET: ${JWT_SECRET:-replace-this-with-a-32-char-random-secret-in-prod}
+      APP_URL: http://localhost:3000
+      CORS_ORIGIN: http://localhost:3000
+      COOKIE_SECURE: "false"
+    ports:
+      - "3000:3000"
+    command: >
+      sh -c "npx tsx src/server/db/migrate.ts && npx tsx server.ts"
+
+volumes:
+  crewforge_pgdata:
